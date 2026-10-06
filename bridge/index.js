@@ -50,12 +50,12 @@ client.on("disconnected", (reason) => {
 async function phoneOf(msg) {
   const [user, server] = msg.from.split("@");
   if (server === "c.us") return "+" + user;
-  // Newer chats use a hidden id ("@lid"); the contact still knows the real number.
+  // Newer chats use a hidden id ("@lid") instead of the phone number; ask WhatsApp for the number.
   try {
-    const contact = await msg.getContact();
-    if (contact.number) return "+" + contact.number;
+    const [{ pn }] = await client.getContactLidAndPhone([msg.from]);
+    if (pn) return "+" + pn.split("@")[0];
   } catch {}
-  return msg.from;
+  return msg.from; // Number unknown: use the chat id, which still works for replies.
 }
 
 async function chatIdFor(to) {
