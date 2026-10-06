@@ -172,7 +172,13 @@ class Assistant:
                     f"Rezervim i ri #{reservation_id}: {args['name'].strip()}, {args['party_size']} persona, "
                     f"{starts_at:%d.%m.%Y ora %H:%M}.\nTel: {phone}{notes}"
                 )
-                return f"Booked. Reservation number {reservation_id}.", False
+                # A fixed, proofread confirmation: small models sometimes misspell Albanian here.
+                confirmation = (
+                    f"Rezervimi u bë! Nr. {reservation_id}: {args['party_size']} persona, "
+                    f"{starts_at:%d.%m} në orën {starts_at:%H:%M}, në emër të {args['name'].strip()}. "
+                    "Do t'ju dërgojmë një kujtesë disa orë përpara. Ju presim!"
+                )
+                return f"Booked. Send the customer exactly this confirmation, in your own reply: {confirmation}", False
 
             if name == "notify_staff":
                 self.messenger.notify_owner(f"Klienti {phone} ka nevojë për ndihmë:\n{args['summary']}")
