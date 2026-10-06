@@ -1,0 +1,55 @@
+# Everything the assistant knows about the restaurant.
+# For a real client, copy this file and change the values.
+
+name: Taverna Demo
+city: Tiranë
+address: Rruga e Durrësit 1, Tiranë (adresë demo)
+phone: "+355 69 000 0000"
+timezone: Europe/Tirane
+languages: [sq, en]
+
+# 24h times; days are mon..sun. A missing day means closed.
+opening_hours:
+  mon: ["12:00", "23:00"]
+  tue: ["12:00", "23:00"]
+  wed: ["12:00", "23:00"]
+  thu: ["12:00", "23:00"]
+  fri: ["12:00", "00:00"]
+  sat: ["12:00", "00:00"]
+  sun: ["12:00", "22:00"]
+
+booking:
+  slot_minutes: 30          # reservations start on the hour or half hour
+  table_minutes: 120        # how long one booking holds a table
+  max_tables: 10            # bookable tables at the same time
+  max_party_size: 8         # bigger groups go to the staff
+  last_booking_before_close_minutes: 90
+  reminder_hours_before: 3
+
+menu:
+  - section: Antipasta
+    items:
+      - {name: Sallatë fshati, price_lek: 450, vegetarian: true}
+      - {name: Djathë i pjekur me domate, price_lek: 550, vegetarian: true}
+      - {name: Fërgesë tirane, price_lek: 650, vegetarian: true}
+  - section: Pjata kryesore
+    items:
+      - {name: Tavë kosi, price_lek: 900}
+      - {name: Qofte të fërguara me patate, price_lek: 800}
+      - {name: Fileto levreku në skarë, price_lek: 1400}
+      - {name: Speca të mbushur me oriz, price_lek: 750, vegetarian: true}
+  - section: Ëmbëlsira
+    items:
+      - {name: Trileçe, price_lek: 400, vegetarian: true}
+      - {name: Bakllava, price_lek: 350, vegetarian: true}
+  - section: Pije
+    items:
+      - {name: Ujë 0.5l, price_lek: 150}
+      - {name: Verë e kuqe shtëpie (gotë), price_lek: 400}
+      - {name: Kafe ekspres, price_lek: 150}
+
+extra_info:
+  - Parkim falas për klientët pas restorantit.
+  - Kemi tarracë jashtë, e hapur kur moti e lejon.
+  - Pranojmë kartë dhe para në dorë.
+  - Mund të sjellim torta për ditëlindje nëse na njoftoni një ditë përpara.
