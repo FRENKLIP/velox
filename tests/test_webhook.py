@@ -83,3 +83,27 @@ def test_meta_message_is_answered(meta_main, monkeypatch):
     assert unsigned.status_code == 403
     assert r.status_code == 200
     assert sent == [("+355685397289", "echo A keni vend?")]
+
+
+@pytest.fixture
+def bridge_main(tmp_path, monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test")
+    monkeypatch.setenv("WHATSAPP_PROVIDER", "bridge")
+    monkeypatch.setenv("BRIDGE_TOKEN", "bridge-secret")
+    monkeypatch.setenv("DATABASE_PATH", str(tmp_path / "b.db"))
+    import app.main
+
+    return importlib.reload(app.main)
+
+
+def test_bridge_message_is_answered(bridge_main, monkeypatch):
+    monkeypatch.setattr(bridge_main.assistant, "reply", lambda phone, text: f"echo {phone} {text}")
+    payload = {"from": "+355685397289", "text": "A keni vend?"}
+    with TestClient(bridge_main.app) as client:
+        no_token = client.post("/bridge/message", json=payload)
+        r = client.post("/bridge/message", json=payload, headers={"X-Bridge-Token": "bridge-secret"})
+        empty = client.post("/bridge/message", json={"from": "+355685397289", "text": ""},
+                            headers={"X-Bridge-Token": "bridge-secret"})
+    assert no_token.status_code == 403
+    assert r.json() == {"reply": "echo +355685397289 A keni vend?"}
+    assert "mesazhe me tekst" in empty.json()["reply"]

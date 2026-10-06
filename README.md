@@ -25,7 +25,8 @@ It:
 | `app/assistant.py` | The Claude conversation and tools |
 | `app/booking.py` | Opening hours, time slots and table availability |
 | `app/db.py` | SQLite storage for messages and reservations |
-| `app/messaging.py` | Sending WhatsApp messages through Twilio |
+| `app/messaging.py` | Sending WhatsApp messages through Twilio, Meta or the bridge |
+| `bridge/` | Free WhatsApp Web bridge for demos on a spare SIM (Node.js) |
 
 ## Model and cost
 
@@ -69,6 +70,25 @@ Meta gives every developer app a free WhatsApp test number that can message up t
 6. From your phone, send a message to the test number shown in API Setup.
 
 The temporary token expires after 24 hours; for longer tests create a permanent token with a system user in Meta Business settings. Menu names on Meta's site change from time to time.
+
+### Connect WhatsApp (free demo on a spare SIM)
+
+The bridge in `bridge/` logs in to a normal WhatsApp account through WhatsApp Web, so any number works and nothing costs money. It is unofficial: WhatsApp may ban the number. Use a spare SIM only, never a client's number, and move to Twilio or Meta for real clients.
+
+You need [Node.js](https://nodejs.org) 20.12 or newer and a phone with WhatsApp installed on the spare SIM.
+
+1. In `.env` set `WHATSAPP_PROVIDER=bridge`, make up a word for `BRIDGE_TOKEN`, and set `OWNER_WHATSAPP` to your own number.
+2. Start the bot as usual: `uvicorn app.main:app --port 8000`. No ngrok needed.
+3. In a second terminal:
+   ```bash
+   cd bridge
+   npm install      # first time only; downloads a small Chrome
+   npm start
+   ```
+4. A QR code appears. On the spare phone open **WhatsApp > Linked devices > Link a device** and scan it. The login is saved, so next time you only run `npm start`.
+5. From your own phone, message the spare number.
+
+Keep both terminals open while you demo. If the bridge says it disconnected, run `npm start` again.
 
 ## Deploy
 

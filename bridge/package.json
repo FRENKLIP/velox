@@ -1,0 +1,16 @@
+{
+  "name": "velox-whatsapp-bridge",
+  "private": true,
+  "description": "Connects a normal WhatsApp account to the Velox bot through WhatsApp Web. Demo only.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=20.12"
+  },
+  "dependencies": {
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.34.1"
+  }
+}

@@ -31,6 +31,8 @@ class Settings:
     meta_verify_token: str
     meta_app_secret: str
     meta_graph_version: str
+    bridge_url: str
+    bridge_token: str
 
 
 def load_settings() -> Settings:
@@ -51,6 +53,8 @@ def load_settings() -> Settings:
         meta_verify_token=os.getenv("META_VERIFY_TOKEN", ""),
         meta_app_secret=os.getenv("META_APP_SECRET", ""),
         meta_graph_version=os.getenv("META_GRAPH_VERSION", "v23.0"),
+        bridge_url=os.getenv("BRIDGE_URL", "http://127.0.0.1:3001").rstrip("/"),
+        bridge_token=os.getenv("BRIDGE_TOKEN", ""),
     )
 
 

@@ -4,3 +4,9 @@ __pycache__/
 .pytest_cache/
 .venv/
 venv/
+
+# WhatsApp Web bridge
+bridge/node_modules/
+bridge/.wwebjs_auth/
+bridge/.wwebjs_cache/
+.wwebjs_cache/

@@ -1,4 +1,4 @@
-"""Web server: receives WhatsApp messages from Twilio and sends reminders."""
+"""Web server: receives WhatsApp messages (Twilio, Meta or the WhatsApp Web bridge) and sends reminders."""
 
 import asyncio
 import hashlib
@@ -173,3 +173,26 @@ async def meta_webhook(request: Request, background: BackgroundTasks) -> dict:
                     background.add_task(messenger.send, phone, TEXT_ONLY)
     # Answer fast: Meta retries webhooks that do not get a 200 quickly.
     return {"status": "ok"}
+
+
+# WhatsApp Web bridge (bridge/index.js), for demos on a spare number
+
+@app.post("/bridge/message")
+async def bridge_message(request: Request) -> dict:
+    if settings.bridge_token and not hmac.compare_digest(
+        request.headers.get("X-Bridge-Token", ""), settings.bridge_token
+    ):
+        raise HTTPException(status_code=403, detail="Invalid bridge token")
+    data = await request.json()
+    phone = str(data.get("from", "")).strip()
+    text = str(data.get("text", "")).strip()
+    if not phone:
+        raise HTTPException(status_code=400, detail="Missing sender")
+    if not text:
+        return {"reply": TEXT_ONLY}
+    try:
+        body = await run_in_threadpool(answer_message, phone, text)
+    except Exception:
+        log.exception("Failed to handle message from %s", phone)
+        body = HANDOFF_SQ
+    return {"reply": body}

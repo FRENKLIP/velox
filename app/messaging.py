@@ -1,4 +1,4 @@
-"""Sending WhatsApp messages through Twilio or Meta's WhatsApp Cloud API."""
+"""Sending WhatsApp messages through Twilio, Meta's WhatsApp Cloud API, or the WhatsApp Web bridge."""
 
 import logging
 from typing import Protocol
@@ -102,5 +102,39 @@ class MetaMessenger:
             log.info("OWNER_WHATSAPP not set; owner message: %s", body)
 
 
+class BridgeMessenger:
+    """The WhatsApp Web bridge in bridge/, which runs a normal WhatsApp account (demo only)."""
+
+    def __init__(self, settings: Settings):
+        self.settings = settings
+
+    def send(self, to: str, body: str) -> None:
+        if not body.strip():
+            return
+        try:
+            r = httpx.post(
+                f"{self.settings.bridge_url}/send",
+                json={"to": to, "body": body},
+                headers={"X-Bridge-Token": self.settings.bridge_token},
+                timeout=30,
+            )
+        except httpx.HTTPError as e:
+            log.error("Could not reach the WhatsApp bridge to message %s: %s", to, e)
+            return
+        if r.status_code >= 400:
+            # A failed alert must not break the conversation or lose a booking.
+            log.error("Bridge refused message to %s (HTTP %s): %s", to, r.status_code, r.text)
+
+    def notify_owner(self, body: str) -> None:
+        if self.settings.owner_whatsapp:
+            self.send(self.settings.owner_whatsapp, body)
+        else:
+            log.info("OWNER_WHATSAPP not set; owner message: %s", body)
+
+
 def make_messenger(settings: Settings) -> Messenger:
-    return MetaMessenger(settings) if settings.whatsapp_provider == "meta" else TwilioMessenger(settings)
+    if settings.whatsapp_provider == "meta":
+        return MetaMessenger(settings)
+    if settings.whatsapp_provider == "bridge":
+        return BridgeMessenger(settings)
+    return TwilioMessenger(settings)
