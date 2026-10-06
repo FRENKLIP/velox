@@ -129,7 +129,8 @@ class Assistant:
         self.db = db
         self.messenger = messenger
         self.model = model
-        self.client = anthropic.Anthropic()
+        # Customers are waiting on WhatsApp: fail fast instead of the 10-minute default.
+        self.client = anthropic.Anthropic(timeout=45.0, max_retries=2)
         self.system_prompt = SYSTEM_PROMPT.format(
             name=restaurant["name"], city=restaurant["city"], info=_restaurant_info(restaurant)
         )
