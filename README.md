@@ -41,6 +41,7 @@ source .venv/bin/activate
 pip install -r requirements-dev.txt
 cp .env.example .env   # then fill in the values
 pytest                 # runs the tests, no keys needed
+python chat.py         # chat with the bot in the terminal, only needs ANTHROPIC_API_KEY
 uvicorn app.main:app --reload --port 8000
 ```
 
