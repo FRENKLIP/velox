@@ -53,6 +53,8 @@ uvicorn app.main:app --reload --port 8000
 4. Put the same base URL in `PUBLIC_BASE_URL` in `.env`, so the server can check that requests really come from Twilio.
 5. Send the sandbox number a message such as "A keni tavolinë për 4 nesër në 20:00?".
 
+Twilio's newer WhatsApp trial number (the "join twilio-trial" one) refuses free-form messages sent through the API (error 21654, "ContentSid Required"). With `REPLY_IN_WEBHOOK=true` (the default) the bot answers inside Twilio's request instead, which the trial allows. Owner alerts and reminders still go through the API, so on the trial number they only show up as errors in the log; they work once we use our own WhatsApp sender.
+
 Note: WhatsApp only lets a business message a customer freely within 24 hours of the customer's last message. Reminders sent later than that need an approved message template once we move to our own number. For the demo, test bookings made the same day.
 
 ## Deploy

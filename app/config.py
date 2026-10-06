@@ -24,6 +24,7 @@ class Settings:
     restaurant_file: str
     validate_twilio_signature: bool
     public_base_url: str
+    reply_in_webhook: bool
 
 
 def load_settings() -> Settings:
@@ -37,6 +38,7 @@ def load_settings() -> Settings:
         restaurant_file=os.getenv("RESTAURANT_FILE", str(ROOT / "restaurant.yaml")),
         validate_twilio_signature=os.getenv("VALIDATE_TWILIO_SIGNATURE", "true").lower() == "true",
         public_base_url=os.getenv("PUBLIC_BASE_URL", "").rstrip("/"),
+        reply_in_webhook=os.getenv("REPLY_IN_WEBHOOK", "true").lower() == "true",
     )
 
 

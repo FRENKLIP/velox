@@ -2,6 +2,7 @@
 
 import logging
 
+from twilio.base.exceptions import TwilioRestException
 from twilio.rest import Client
 
 from .config import Settings
@@ -30,12 +31,16 @@ class Messenger:
         if self.client is None:
             log.warning("Twilio not configured; would send to %s: %s", to, body)
             return
-        for start in range(0, len(body), WHATSAPP_MAX_CHARS):
-            self.client.messages.create(
-                from_=_whatsapp(self.settings.twilio_whatsapp_from),
-                to=_whatsapp(to),
-                body=body[start : start + WHATSAPP_MAX_CHARS],
-            )
+        try:
+            for start in range(0, len(body), WHATSAPP_MAX_CHARS):
+                self.client.messages.create(
+                    from_=_whatsapp(self.settings.twilio_whatsapp_from),
+                    to=_whatsapp(to),
+                    body=body[start : start + WHATSAPP_MAX_CHARS],
+                )
+        except TwilioRestException as e:
+            # A failed alert must not break the conversation or lose a booking.
+            log.error("Could not send WhatsApp message to %s (Twilio error %s): %s", to, e.code, e.msg)
 
     def notify_owner(self, body: str) -> None:
         if self.settings.owner_whatsapp:
