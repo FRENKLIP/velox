@@ -123,3 +123,13 @@ def test_history_is_merged_and_starts_with_user(setup):
     assistant.reply("+355694444444", "a jeni hapur sot?")
     messages = fake.requests[0]["messages"]
     assert messages == [{"role": "user", "content": "Pershendetje\na jeni hapur sot?"}]
+
+
+def test_haiku_uses_the_plain_endpoint(setup):
+    assistant, db, messenger = setup
+    assistant.model = "claude-haiku-4-5"
+    fake = install(assistant, [("end_turn", [text("Jemi hapur nga ora 12:00.")])])
+    assert assistant.reply("+355695555555", "Kur hapeni?") == "Jemi hapur nga ora 12:00."
+    request = fake.requests[0]
+    assert request["model"] == "claude-haiku-4-5"
+    assert "fallbacks" not in request and "output_config" not in request

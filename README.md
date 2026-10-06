@@ -27,6 +27,10 @@ It:
 | `app/db.py` | SQLite storage for messages and reservations |
 | `app/messaging.py` | Sending WhatsApp messages through Twilio |
 
+## Model and cost
+
+The demo uses Claude Haiku (`claude-haiku-4-5`), the cheapest Claude model: roughly a cent per booking conversation at published prices. To try a stronger model for harder conversations, set `ANTHROPIC_MODEL=claude-sonnet-5-5` or `claude-opus-5-5` in `.env`.
+
 ## Run it locally
 
 You need Python 3.11+, a [Claude API key](https://console.anthropic.com) and a free [Twilio](https://www.twilio.com) account.

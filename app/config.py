@@ -28,7 +28,7 @@ class Settings:
 
 def load_settings() -> Settings:
     return Settings(
-        anthropic_model=os.getenv("ANTHROPIC_MODEL", "claude-opus-5-5"),
+        anthropic_model=os.getenv("ANTHROPIC_MODEL", "claude-haiku-4-5"),
         twilio_account_sid=os.getenv("TWILIO_ACCOUNT_SID", ""),
         twilio_auth_token=os.getenv("TWILIO_AUTH_TOKEN", ""),
         twilio_whatsapp_from=os.getenv("TWILIO_WHATSAPP_FROM", ""),
