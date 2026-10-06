@@ -1,11 +1,13 @@
 """Web server: receives WhatsApp messages from Twilio and sends reminders."""
 
 import asyncio
+import hashlib
+import hmac
 import logging
 from contextlib import asynccontextmanager
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, Response
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Query, Request, Response
 from fastapi.concurrency import run_in_threadpool
 from twilio.request_validator import RequestValidator
 from twilio.twiml.messaging_response import MessagingResponse
@@ -13,7 +15,7 @@ from twilio.twiml.messaging_response import MessagingResponse
 from .assistant import HANDOFF_SQ, Assistant
 from .config import load_restaurant, load_settings
 from .db import Database
-from .messaging import Messenger
+from .messaging import make_messenger
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("velox")
@@ -21,7 +23,7 @@ log = logging.getLogger("velox")
 settings = load_settings()
 restaurant = load_restaurant(settings.restaurant_file)
 db = Database(settings.database_path)
-messenger = Messenger(settings)
+messenger = make_messenger(settings)
 assistant = Assistant(restaurant, db, messenger, settings.anthropic_model)
 
 TEXT_ONLY = "Për momentin mund të lexoj vetëm mesazhe me tekst."
@@ -136,3 +138,38 @@ async def whatsapp_webhook(request: Request, background: BackgroundTasks) -> Res
     background.add_task(process_message, phone, text)
 
     return Response(content=EMPTY_TWIML, media_type="application/xml")
+
+
+# Meta WhatsApp Cloud API
+
+@app.get("/meta/webhook")
+def meta_verify(
+    mode: str = Query("", alias="hub.mode"),
+    token: str = Query("", alias="hub.verify_token"),
+    challenge: str = Query("", alias="hub.challenge"),
+) -> Response:
+    """Meta calls this once when you save the webhook, to check it is yours."""
+    if mode == "subscribe" and settings.meta_verify_token and hmac.compare_digest(token, settings.meta_verify_token):
+        return Response(content=challenge, media_type="text/plain")
+    raise HTTPException(status_code=403, detail="Verification failed")
+
+
+@app.post("/meta/webhook")
+async def meta_webhook(request: Request, background: BackgroundTasks) -> dict:
+    raw = await request.body()
+    if settings.meta_app_secret:
+        expected = "sha256=" + hmac.new(settings.meta_app_secret.encode(), raw, hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(expected, request.headers.get("X-Hub-Signature-256", "")):
+            raise HTTPException(status_code=403, detail="Invalid Meta signature")
+
+    payload = await request.json()
+    for entry in payload.get("entry", []):
+        for change in entry.get("changes", []):
+            for message in change.get("value", {}).get("messages", []):
+                phone = "+" + str(message.get("from", "")).lstrip("+")
+                if message.get("type") == "text":
+                    background.add_task(process_message, phone, message["text"]["body"].strip())
+                else:
+                    background.add_task(messenger.send, phone, TEXT_ONLY)
+    # Answer fast: Meta retries webhooks that do not get a 200 quickly.
+    return {"status": "ok"}

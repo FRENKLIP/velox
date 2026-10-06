@@ -39,3 +39,47 @@ def test_errors_fall_back_to_staff_handoff(main, monkeypatch):
     with TestClient(main.app) as client:
         r = client.post("/whatsapp", data={"From": "whatsapp:+355685397289", "Body": "hej"})
     assert "stafi" in r.text
+
+
+@pytest.fixture
+def meta_main(tmp_path, monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test")
+    monkeypatch.setenv("WHATSAPP_PROVIDER", "meta")
+    monkeypatch.setenv("META_VERIFY_TOKEN", "velox-verify")
+    monkeypatch.setenv("META_APP_SECRET", "s3cret")
+    monkeypatch.setenv("META_ACCESS_TOKEN", "")
+    monkeypatch.setenv("DATABASE_PATH", str(tmp_path / "m.db"))
+    import app.main
+
+    return importlib.reload(app.main)
+
+
+def test_meta_verification(meta_main):
+    with TestClient(meta_main.app) as client:
+        ok = client.get("/meta/webhook", params={
+            "hub.mode": "subscribe", "hub.verify_token": "velox-verify", "hub.challenge": "12345"})
+        bad = client.get("/meta/webhook", params={
+            "hub.mode": "subscribe", "hub.verify_token": "wrong", "hub.challenge": "12345"})
+    assert ok.status_code == 200 and ok.text == "12345"
+    assert bad.status_code == 403
+
+
+def test_meta_message_is_answered(meta_main, monkeypatch):
+    import hashlib
+    import hmac
+    import json
+
+    sent = []
+    monkeypatch.setattr(meta_main.assistant, "reply", lambda phone, text: f"echo {text}")
+    monkeypatch.setattr(meta_main.messenger, "send", lambda to, body: sent.append((to, body)))
+    body = json.dumps({"entry": [{"changes": [{"value": {"messages": [
+        {"from": "355685397289", "type": "text", "text": {"body": "A keni vend?"}}]}}]}]}).encode()
+    signature = "sha256=" + hmac.new(b"s3cret", body, hashlib.sha256).hexdigest()
+
+    with TestClient(meta_main.app) as client:
+        unsigned = client.post("/meta/webhook", content=body, headers={"Content-Type": "application/json"})
+        r = client.post("/meta/webhook", content=body,
+                        headers={"Content-Type": "application/json", "X-Hub-Signature-256": signature})
+    assert unsigned.status_code == 403
+    assert r.status_code == 200
+    assert sent == [("+355685397289", "echo A keni vend?")]

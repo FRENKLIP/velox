@@ -25,6 +25,12 @@ class Settings:
     validate_twilio_signature: bool
     public_base_url: str
     reply_in_webhook: bool
+    whatsapp_provider: str
+    meta_access_token: str
+    meta_phone_number_id: str
+    meta_verify_token: str
+    meta_app_secret: str
+    meta_graph_version: str
 
 
 def load_settings() -> Settings:
@@ -39,6 +45,12 @@ def load_settings() -> Settings:
         validate_twilio_signature=os.getenv("VALIDATE_TWILIO_SIGNATURE", "true").lower() == "true",
         public_base_url=os.getenv("PUBLIC_BASE_URL", "").rstrip("/"),
         reply_in_webhook=os.getenv("REPLY_IN_WEBHOOK", "true").lower() == "true",
+        whatsapp_provider=os.getenv("WHATSAPP_PROVIDER", "twilio").lower(),
+        meta_access_token=os.getenv("META_ACCESS_TOKEN", ""),
+        meta_phone_number_id=os.getenv("META_PHONE_NUMBER_ID", ""),
+        meta_verify_token=os.getenv("META_VERIFY_TOKEN", ""),
+        meta_app_secret=os.getenv("META_APP_SECRET", ""),
+        meta_graph_version=os.getenv("META_GRAPH_VERSION", "v23.0"),
     )
 
 

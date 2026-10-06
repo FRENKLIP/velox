@@ -57,6 +57,19 @@ Twilio's newer WhatsApp trial number (the "join twilio-trial" one) refuses free-
 
 Note: WhatsApp only lets a business message a customer freely within 24 hours of the customer's last message. Reminders sent later than that need an approved message template once we move to our own number. For the demo, test bookings made the same day.
 
+### Connect WhatsApp (Meta test number, free)
+
+Meta gives every developer app a free WhatsApp test number that can message up to 5 phone numbers you register. Unlike Twilio's trial number, it allows normal replies.
+
+1. Go to [developers.facebook.com](https://developers.facebook.com), log in with Facebook, and create an app (choose the WhatsApp / "Connect with customers" use case, or type Business).
+2. Add the **WhatsApp** product and open **API Setup**. Copy the temporary **access token** and the **Phone number ID** into `.env` as `META_ACCESS_TOKEN` and `META_PHONE_NUMBER_ID`, and set `WHATSAPP_PROVIDER=meta`.
+3. In the **To** field on the same page, add your phone number and confirm it with the code Meta sends. Add the owner's number too.
+4. Copy **App settings > Basic > App secret** into `META_APP_SECRET`, and make up any word for `META_VERIFY_TOKEN`.
+5. Start the bot and ngrok, then in **WhatsApp > Configuration > Webhook** set the callback URL to `https://<your-ngrok-url>/meta/webhook` and the verify token to your word. Click **Verify and save**, then subscribe to the **messages** field.
+6. From your phone, send a message to the test number shown in API Setup.
+
+The temporary token expires after 24 hours; for longer tests create a permanent token with a system user in Meta Business settings. Menu names on Meta's site change from time to time.
+
 ## Deploy
 
 Render or Railway both work: create a web service from this repository, set the start command to `uvicorn app.main:app --host 0.0.0.0 --port $PORT`, add the variables from `.env.example`, and point the Twilio webhook at `https://<service-url>/whatsapp`. SQLite lives on the service's disk, so use a persistent disk or move to Postgres before real clients.
